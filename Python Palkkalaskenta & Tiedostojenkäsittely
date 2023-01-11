@@ -1,0 +1,183 @@
+def my_split(sentence, sep):
+    lst = []
+    tmp = ''
+    for c in sentence:
+        if c == sep:
+            lst.append(tmp)
+            tmp = ''
+        else:
+            tmp += c
+    if tmp:
+        lst.append(tmp)
+
+    return lst
+
+
+def my_join(lista, x):
+    mjono = ""
+    for i in lista:
+        mjono = mjono + i + x
+    mjono = mjono[:-1] + '\n'
+    return mjono
+
+class PayrollSystem:
+    def calclulate_payroll(self, employees):
+        for employee in employees:
+            print("Palkkalaskelma")
+            print("==============")
+            print(f'Henkilölle: {employee.id} - {employee.name}')
+            print(f'- Maksetaan: {employee.calculate_salary()}')
+            print('')
+
+
+class Employee:
+    def __init__(self, id, name):
+        self.id = id
+        self.name = name
+    def ask_name(self):
+        try:
+            self.name = str(input("Anna työntekijän nimi:"))
+        except:
+            self.name = ''
+
+
+class SalaryEmployee(Employee):
+    def __init__(self, id, name, monthly_salary):
+        super().__init__(id, name)
+        self.salary = 'M'
+        self.monthly_salary = int(monthly_salary)
+
+    def ask_salary(self):
+        try:
+            self.monthly_salary = int(input("Anna kuukausipalkka:"))
+        except:
+            self.monthly_salary = 0
+
+    def calculate_salary(self):
+        return self.monthly_salary
+
+
+
+class HourlyEmployee(Employee):
+    def __init__(self, id, name, hour_rate, hours_worked):
+        super().__init__(id, name)
+        self.salary = 'H'
+        self.hour_rate = hour_rate
+        self.hours_worked = hours_worked
+
+    def ask_salary(self):
+        try:
+            self.hours_worked = int(input("Anna tehdyt tunnit:"))
+            self.hour_rate = int(input("Anna tuntipalkka:"))
+        except:
+            self.hours_worked = 0
+            self.hour_rate = 0
+
+    def calculate_salary(self):
+        return self.hours_worked * self.hour_rate
+
+
+
+class CommissionEmployee(Employee):
+    def __init__(self, id, name, monthly_salary, comission):
+        super().__init__(id, name)
+        self.salary = 'C'
+        self.monthly_salary = monthly_salary
+        self.comission = comission
+
+    def ask_salary(self):
+        try:
+            self.monthly_salary = int(input("Anna kuukausipalkka:"))
+            self.comission = int(input("Anna komissio:"))
+        except:
+            self.monthly_salary = 0
+            self.comission = 0
+
+    def calculate_salary(self):
+        return self.monthly_salary + self.comission
+
+
+employees = []
+employees_names = []
+id = 1
+
+while True:
+    print("(1) Lisää työntekijöitä\n(2) Kirjoita työntekijät tiedostoon\n(3) Lue työntekijät tiedostosta\n(4) Tulosta palkkalaskelma\n(0) Lopeta\n")
+    selection = int(input("Valitse toiminto: "))
+    if selection == 1:
+        while True:
+            salarytype = int(input("Anna palkkatyyppi:\n(1) Kuukausi\n(2) Tunti\n(3) Komissio\n(0) Lopeta\n"))
+            if salarytype == 1:
+                employee = SalaryEmployee(id, '', 0)
+                SalaryEmployee.ask_name(employee)
+                SalaryEmployee.ask_salary(employee)
+                if employee.name not in employees_names:
+                    employees.append(employee)
+                    employees_names.append(employee.name)
+                    id += 1
+            elif salarytype == 2:
+                employee = HourlyEmployee(id, '', 0, 0)
+                HourlyEmployee.ask_name(employee)
+                HourlyEmployee.ask_salary(employee)
+                if employee.name not in employees_names:
+                    employees.append(employee)
+                    employees_names.append(employee.name)
+                    id += 1
+            elif salarytype == 3:
+                employee = CommissionEmployee(id, '', 0, 0)
+                CommissionEmployee.ask_name(employee)
+                CommissionEmployee.ask_salary(employee)
+                if employee.name not in employees_names:
+                    employees.append(employee)
+                    employees_names.append(employee.name)
+                    id += 1
+            elif salarytype == 0:
+                break
+            else:
+                print("Virheellinen valinta.")
+    elif selection == 2:
+        with open("employee.csv", "w") as tiedosto:
+            for i in employees:
+                if i.salary == "M":
+                    temp = [str(i.id), str(i.name), str(i.salary), str(i.monthly_salary)]
+                    line = my_join(temp, ',')
+                    tiedosto.write(line)
+                elif i.salary == "H":
+                    temp = [str(i.id), str(i.name), str(i.salary), str(i.hours_worked), str(i.hour_rate)]
+                    line = my_join(temp, ',')
+                    tiedosto.write(line)
+                elif i.salary == "C":
+                    temp = [str(i.id), str(i.name), str(i.salary), str(i.monthly_salary), str(i.comission)]
+                    line = my_join(temp, ',')
+                    tiedosto.write(line)
+        tiedosto.close()
+        print(len(employees), " työntekijä(ä) lisätty tiedostoon employee.csv")
+        employees = []
+        employees_names = []
+    elif selection == 3:
+        with open("employee.csv") as tiedosto:
+            for rivi in tiedosto:
+                rivi = rivi.replace('\n', '')
+                osat = my_split(rivi, ',')
+                if osat[2] == 'M':
+                    temp = SalaryEmployee(int(osat[0]), osat[1], int(osat[3]),)
+                    employees.append(temp)
+                    employees_names.append(osat[1])
+                elif osat[2] == 'H':
+                    temp = HourlyEmployee(int(osat[0]), osat[1], int(osat[3]), int(osat[4]))
+                    employees.append(temp)
+                    employees_names.append(osat[1])
+                elif osat[2] == 'C':
+                    temp = CommissionEmployee(int(osat[0]), osat[1], int(osat[3]), int(osat[4]))
+                    employees.append(temp)
+                    employees_names.append(osat[1])
+        tiedosto.close()
+        print(len(employees), " työntekijä(ä) luettu tiedostosta employee.csv")
+    elif selection == 4:
+        payroll_system = PayrollSystem()
+        payroll_system.calclulate_payroll(employees)
+    elif selection == 0:
+        break
+    else:
+        print("Virheellinen valinta.")
+print("Palvelu suljetaan, kiitos.")
