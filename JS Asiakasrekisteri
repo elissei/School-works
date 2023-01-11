@@ -1,0 +1,38 @@
+var kauppa = {};
+kauppa.asiakasrekisteri = (function() {
+	var rekisteri = [];
+	var id = 0;
+	function lisaa(etunimi, sukunimi) {
+		rekisteri.push({id, etunimi, sukunimi});
+		console.log("Lisätty asiakas ID:llä " + id);
+		id++;
+	}
+	function asiakkaanTiedot(x) {
+		if (!rekisteri[x]) {
+			console.log("Liian korkea ID!");
+		} else {
+			console.log(rekisteri[x].id + ": " + rekisteri[x].sukunimi + " " + rekisteri[x].etunimi);
+		}
+	}
+	function asiakasLista() {
+		console.log("Tulostetaan kaikki asiakkaat:");
+		for (var i = 0; i < rekisteri.length; i++){
+			console.log(rekisteri[i].id + ": " + rekisteri[i].sukunimi + " " + rekisteri[i].etunimi);
+			}
+	}
+
+return{
+	lisaa: lisaa,
+	asiakkaanTiedot: asiakkaanTiedot,
+	asiakasLista: asiakasLista
+};
+})();
+
+
+kauppa.asiakasrekisteri.asiakkaanTiedot(0);
+kauppa.asiakasrekisteri.lisaa("Matti", "Meikäläinen");
+kauppa.asiakasrekisteri.lisaa("Hanna", "Huippukoodari");
+kauppa.asiakarekisteri.asiakkaanTiedot(1);
+kauppa.asiakasrekisteri.lisaa("Kerttu", "Leppä");
+kauppa.asiakasrekisteri.lisaa("Simo", "Hillo");
+kauppa.asiakasrekisteri.asiakasLista();
