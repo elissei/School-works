@@ -1,0 +1,178 @@
+import java.io.File
+
+abstract class Employee(val id: Int, val name: String, val type: String) {
+    abstract fun calculateSalary(): Int
+}
+
+class SalaryEmployee(id: Int, name: String, val salary: Int) : Employee(id, name, "M") {
+    override fun calculateSalary(): Int {
+        return salary
+    }
+}
+
+class HourlyEmployee(id: Int, name: String, val hoursWorked: Int, val hourlyRate: Int) : Employee(id, name, "H") {
+    override fun calculateSalary(): Int {
+        return hoursWorked * hourlyRate
+    }
+}
+
+class CommissionEmployee(id: Int, name: String, val salary: Int, val commission: Int) : Employee(id, name, "C") {
+    override fun calculateSalary(): Int {
+        return salary + commission
+    }
+}
+
+class PayrollSystem {
+    fun calculatePayroll(employees: List<Employee>) {
+        for (employee in employees) {
+            println("Employee Payroll\n================")
+            println("Payroll for: ${employee.id} - ${employee.name}\n- Check amount: ${employee.calculateSalary()}\n")
+        }
+    }
+}
+
+fun main() {
+    var employees = mutableListOf<Employee>()
+    var salaryType: Int
+    var name: String
+    var selection = -1
+    val quit1 = 0
+    var id = 1
+    loop@ while (selection !== 0) {
+        println("(1) Add employee to employees")
+        println("(2) Write employees to file")
+        println("(3) Read employees from file")
+        println("(4) Print payroll")
+        println("(0) Quit")
+        print("Please select one:")
+        try {
+            selection = readLine()!!.toInt()
+        } catch (e: NumberFormatException) {
+            println("Invalid input format. Please enter a valid number.")
+            selection = -1
+        }
+        when (selection) {
+            1 -> {
+                if(employees.isEmpty()) {
+                    id = 1
+                }
+                salaryType = -1
+                while (salaryType != quit1) {
+                    var employee: Employee? = null
+                    println("Please enter salary type:\n(1) monthly\n(2) hourly\n(3) commission\n(0) Quit")
+                    salaryType = readLine()!!.toInt()
+                    when (salaryType) {
+                        1 -> {
+                            print("Please enter employee name:")
+                            name = readLine()!!
+                            print("Please enter monthly salary:")
+                            val salary = readLine()!!.toInt()
+                            employee = SalaryEmployee(id, name, salary)
+                        }
+                        2 -> {
+                            print("Please enter employee name:")
+                            name = readLine()!!
+                            print("Please enter hours worked:")
+                            val hoursWorked = readLine()!!.toInt()
+                            print("Please enter hour rate:")
+                            val hourlyRate = readLine()!!.toInt()
+                            employee = HourlyEmployee(id, name, hoursWorked, hourlyRate)
+                        }
+                        3 -> {
+                            print("Please enter employee name:")
+                            name = readLine()!!
+                            print("Please enter monthly salary:")
+                            val salary = readLine()!!.toInt()
+                            print("Please enter commission:")
+                            val commission = readLine()!!.toInt()
+                            employee = CommissionEmployee(id, name, salary, commission)
+                        }
+                        0 -> {
+                            println("Quit entered.")
+                            continue@loop
+                        }
+                        else -> {
+                            println("Incorrect selection.")
+                            continue@loop
+                        }
+                    }
+                    if (salaryType != 0 && employee != null) {
+                        employees.add(employee)
+                        id++
+                    }
+                }
+            }
+            2 -> {
+                var file = File("employee.csv")
+                file.delete()
+                employees.forEach {
+                    var temp = mutableListOf<String>()
+                    if (it is SalaryEmployee) {
+						temp.add(it.id.toString())
+                    	temp.add(it.name)
+                    	temp.add(it.type)
+                    	temp.add(it.calculateSalary().toString())
+					}else if (it is HourlyEmployee) {
+						temp.add(it.id.toString())
+                    	temp.add(it.name)
+                    	temp.add(it.type)
+                        temp.add(it.hoursWorked.toString())
+                        temp.add(it.hourlyRate.toString())
+                    } else if (it is CommissionEmployee) {
+						temp.add(it.id.toString())
+                    	temp.add(it.name)
+                    	temp.add(it.type)
+						temp.add(it.salary.toString())
+                        temp.add(it.commission.toString())
+                    }
+                    var temp1 = temp.joinToString(",")
+                    file.appendText("$temp1\n")
+                }
+                println("${employees.count()} employee(s) added to employee.csv")
+            }
+            3 -> {
+                var file = File("employee.csv")
+                var i = 0
+                var x = 0
+                file.forEachLine {
+                    var temp: String = ""
+                    temp += it
+                    var temp1 = temp.split(",").toMutableList()
+                    while (i < temp1.size) {
+                        var xid = temp1[i].toInt()
+                        var xname = temp1[i + 1]
+                        var xtype = temp1[i + 2]
+                        var xsalary = temp1[i + 3].toInt()
+                        if (xtype == "hourly") {
+                            val xhoursWorked = temp1[i + 4].toInt()
+                            val xhourlyRate = temp1[i + 5].toInt()
+                            employees.add(HourlyEmployee(xid, xname, xhoursWorked, xhourlyRate))
+                        }
+                        else if (xtype == "commission") {
+                            val xsalary = temp1[i + 4].toInt()
+                            val xcomission = temp1[i + 5].toInt()
+                            employees.add(CommissionEmployee(xid, xname, xsalary, xcomission))
+                        }
+                        else {
+                            employees.add(SalaryEmployee(xid, xname, xsalary))
+                        }
+                        i += 6
+                    }
+                }
+                val unem = employees.distinctBy({ it.id })
+                employees.clear()
+                employees = unem.toMutableList()
+                println("${employees.count()} employee(s) read from employee.csv")
+            }
+            4 -> {
+                PayrollSystem().calculatePayroll((employees))
+            }
+            0 -> {
+                println("Service shutting down, thank you.")
+            }
+            else -> {
+                println("Incorrect selection.")
+            }
+        }
+    }
+}
