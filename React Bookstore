@@ -1,0 +1,256 @@
+//AddBook.js
+
+import React, { useState } from "react";
+import Button from '@mui/material/Button';
+import TextField from '@mui/material/TextField';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogTitle from '@mui/material/DialogTitle';
+
+function AddBook(props) {
+    const [open, setOpen] = useState(false);
+    const [book, setBook] = useState({title: '', author: '', year: '', isbn: '', price: ''});
+
+    const handleOpen = () => {
+        setOpen(true);
+    }
+
+    const handleClose = () => {
+        setOpen(false);
+    }
+
+    const handleSave = () => {
+        props.addBook(book);
+        handleClose();
+    }
+
+    const inputChanged = (event) => {
+        setBook({...book, [event.target.name]: event.target.value});
+    }
+
+    return(
+        <div>
+            <Button variant="outlined" color="primary" onClick={handleOpen}>
+                ADD BOOK
+            </Button>
+            <Dialog open={open}>
+                <DialogTitle>New book</DialogTitle>
+                <DialogContent>
+                    <TextField
+                        name="title"
+                        value={book.title}
+                        onChange={inputChanged}
+                        margin="dense"
+                        label="Title"
+                        fullWidth
+                    />
+                    <TextField
+                        name="author"
+                        value={book.author}
+                        onChange={inputChanged}
+                        margin="dense"
+                        label="Author"
+                        fullWidth
+                    />
+                    <TextField
+                        name="year"
+                        value={book.year}
+                        onChange={inputChanged}
+                        margin="dense"
+                        label="Year"
+                        fullWidth
+                    />
+                    <TextField
+                        name="isbn"
+                        value={book.isbn}
+                        onChange={inputChanged}
+                        margin="dense"
+                        label="ISBN"
+                        fullWidth
+                    />
+                    <TextField
+                        name="price"
+                        value={book.price}
+                        onChange={inputChanged}
+                        margin="dense"
+                        label="Price"
+                        fullWidth
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button color="primary" onClick={handleClose}>Cancel</Button>                
+                    <Button color="primary" onClick={handleSave}>Save</Button>
+                </DialogActions>
+            </Dialog>
+        </div>
+    )
+}
+
+
+
+
+export default AddBook;
+
+//App.js
+
+import React, { useState, useEffect } from 'react';
+import { AgGridColumn, AgGridReact } from 'ag-grid-react';
+import AppBar from '@mui/material/AppBar';
+import Toolbar from '@mui/material/Toolbar';
+import Typography from '@mui/material/Typography';
+import IconButton from '@mui/material/IconButton';
+import DeleteIcon from '@mui/icons-material/Delete';
+import AddBook from './AddBook';
+
+import './App.css';
+import 'ag-grid-community/dist/styles/ag-grid.css';
+import 'ag-grid-community/dist/styles/ag-theme-material.css';
+
+function App() {
+  const [books, setBooks] = useState([]);
+
+  useEffect(() => {
+    fetchBooks();
+  }, [])
+
+  const fetchBooks = () => {
+    fetch('https://bookstore-d3090-default-rtdb.firebaseio.com/books/.json')
+    .then(response => response.json())
+    .then(data => addKeys(data))
+    .catch(err => console.error(err))
+  }
+
+  const addKeys = (data) => {
+    const keys = Object.keys(data);
+    const valueKeys = Object.values(data).map((item, index) =>
+    Object.defineProperty(item, 'id', {value: keys[index]}));
+    setBooks(valueKeys);
+  }
+
+  const addBook = (newBook) => {
+    fetch('https://bookstore-d3090-default-rtdb.firebaseio.com/books/.json',
+    {
+      method: 'POST',
+      body: JSON.stringify(newBook)
+    })
+    .then(response => fetchBooks())
+    .catch(err => console.error(err))
+  }
+
+  const deleteBook = (id) => {
+    fetch(`https://bookstore-d3090-default-rtdb.firebaseio.com/books/${id}.json`,
+    {
+      method: 'DELETE',
+    })
+    .then(response => fetchBooks())
+    .catch(err => console.error(err))
+  }
+
+  return (
+    <div className="App">
+      <AppBar position='static'>
+        <Toolbar>
+          <Typography variant='h5'>
+            Bookstore
+          </Typography>
+        </Toolbar>
+      </AppBar>
+      <AddBook addBook={addBook}/>
+      <div className='ag-theme-material' style={ { height: 400, width: '70%', margin: 'auto' } }>
+        <AgGridReact rowData={books}>
+          <AgGridColumn sortable={true} filter={true} field='title' />
+          <AgGridColumn sortable={true} filter={true} field='author' />
+          <AgGridColumn sortable={true} filter={true} field='year' />
+          <AgGridColumn sortable={true} filter={true} field='isbn' />
+          <AgGridColumn sortable={true} filter={true} field='price' />
+          <AgGridColumn
+            headerName=''
+            field='id'
+            width={90}
+            cellRenderer={ params =>
+            <IconButton onClick={() => deleteBook(params.value)} size="small" color="error">
+              <DeleteIcon />
+            </IconButton> 
+            }
+          />
+        </AgGridReact>
+      </div>
+    </div>
+  );
+}
+
+export default App;
+
+//index.js
+
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import './index.css';
+import App from './App';
+import reportWebVitals from './reportWebVitals';
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
+
+// If you want to start measuring performance in your app, pass a function
+// to log results (for example: reportWebVitals(console.log))
+// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
+reportWebVitals();
+
+//package.json
+
+{
+  "name": "bookstore",
+  "version": "0.1.0",
+  "homepage": "https://elissei.github.io/bookstore",
+  "private": true,
+  "dependencies": {
+    "@emotion/react": "^11.10.5",
+    "@emotion/styled": "^11.10.5",
+    "@mui/icons-material": "^5.10.15",
+    "@mui/material": "^5.10.15",
+    "@testing-library/jest-dom": "^5.16.5",
+    "@testing-library/react": "^13.4.0",
+    "@testing-library/user-event": "^13.5.0",
+    "ag-grid-community": "^28.2.1",
+    "ag-grid-react": "^28.2.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-scripts": "5.0.1",
+    "web-vitals": "^2.1.4"
+  },
+  "scripts": {
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build",
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "gh-pages": "^4.0.0"
+  }
+}
