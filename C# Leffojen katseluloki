@@ -1,0 +1,125 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Xml.Serialization;
+
+public class Leffojen_Katseluloki
+{
+    static void Main()
+    {
+        List<Leffa> leffat = new List<Leffa>() { };
+        int yhteiskesto = 0;
+        XmlSerializer z = new XmlSerializer(typeof(List<Leffa>));
+
+        while (true)
+        {
+            Console.WriteLine("\n\r\n\rLeffojen Katseluloki\n====================\n1) Lisää Leffa\n2) Poista Leffa\n3) Näytä Raportti\n4) Lataa Tietokanta\n5) Tallenna Tietokanta\n6) Lopeta");
+            Console.Write("Syöte: ");
+            string syote = Console.ReadLine();
+
+            switch (syote)
+            {
+                case "1":
+                    Console.WriteLine("\n\rLisää Leffa:");
+                    Console.Write("Nimi:");
+                    string nimi = Console.ReadLine();
+                    Console.Write("Kesto (min):");
+                    int kesto = Convert.ToInt32(Console.ReadLine());
+                    Console.Write("Vuosi:");
+                    int vuosi = Convert.ToInt32(Console.ReadLine());
+                    leffat.Add(new Leffa(nimi, kesto, vuosi));
+                    break;
+                case "2":
+                    Console.WriteLine("\n\rPoista Leffa:");
+                    int i = 1;
+                    foreach (var leffa in leffat)
+                    {
+                        Console.WriteLine(i + ") " + leffa.Nimi + " (" + leffa.Vuosi + "), " + leffa.Kesto + " minuuttia.  ");
+                        i++;
+                    }
+                    Console.Write("Syöte: ");
+                    int s = Convert.ToInt32(Console.ReadLine());
+                    int kesto3 = leffat[s - 1].Kesto;
+                    yhteiskesto -= kesto3;
+                    leffat.RemoveAt(s - 1);
+                    break;
+                case "3":
+                    if (leffat.Count == 1)
+                    {
+                        foreach (var leffa in leffat)
+                        {
+                            Console.WriteLine("\n\r" + leffa.Nimi + " (" + leffa.Vuosi + "), " + leffa.Kesto + " minuuttia.  ");
+                            yhteiskesto += leffa.Kesto;
+                        }
+                        Console.WriteLine("\n\rLeffoja katsottu yhteensä " + leffat.Count + ", yhteiskesto " + yhteiskesto + " minuuttia.");
+                    }
+                    else if (leffat.Count == 0)
+                    {
+                        Console.Write("\n\r");
+                        Console.WriteLine("\n\rLeffoja katsottu yhteensä " + leffat.Count + ", yhteiskesto " + yhteiskesto + " minuuttia.");
+                    }
+                    else
+                    {
+                        Console.Write("\n\r");
+                        foreach (var leffa in leffat)
+                        {
+                            Console.WriteLine(leffa.Nimi + " (" + leffa.Vuosi + "), " + leffa.Kesto + " minuuttia.  ");
+                            yhteiskesto += leffa.Kesto;
+                        }
+                        Console.WriteLine("\n\rLeffoja katsottu yhteensä " + leffat.Count + ", yhteiskesto " + yhteiskesto + " minuuttia.");
+                    }
+                    break;
+                case "4":
+                    if (File.Exists("tietokanta.xml"))
+                    {
+                        using (FileStream stream = File.OpenRead("tietokanta.xml"))
+                        {
+                            List<Leffa> deserializedList = (List<Leffa>)z.Deserialize(stream);
+                            leffat = deserializedList;
+                        }
+                        Console.WriteLine("\n\rTietokanta ladattu.");
+                    }
+                    else
+                    {
+                        Console.WriteLine("Tietokantaa ei saatavilla.");
+                    }
+                    
+                    break;
+                case "5":
+                    using (StreamWriter sw = new StreamWriter("tietokanta.xml"))
+                    {
+                        z.Serialize(sw, leffat);
+                        sw.Close();
+                    }
+                    Console.WriteLine("\n\rTietokanta tallennettu.");
+                    break;
+                case "6":
+                    break;
+                default:
+                    Console.WriteLine("\n\rTuntematon komento");
+                    break;
+            }
+            if (syote == "6")
+            {
+                Console.Write("\n\r");
+                break;
+            }
+        }
+    }
+    [Serializable]
+    public class Leffa
+    {
+        public string Nimi { get; set; }
+        public int Kesto { get; set; }
+        public int Vuosi { get; set; }
+
+        public Leffa() { }
+
+        public Leffa(string nimi, int kesto, int vuosi)
+        {
+            this.Nimi = nimi;
+            this.Kesto = kesto;
+            this.Vuosi = vuosi;
+        }
+    }
+}
